@@ -68,6 +68,12 @@ Follow these steps if you want to implement your own solver:
   1. Create a new file `MySolver.cpp` and place it in `src/solvers/`.
   2. Run `premake5.exe` to generate project files for the solver.
   
+This repo comes packed with a few simple solvers:
+
+  * **TakePoorest** - Finds the poorest node and takes from its neighbors.
+  * **GiveRichest** - Finds the richest node and gives to its neighbors.
+  * **BogoSolver** - Performs random moves. Probably not going to solve any graph ever.
+  
 ## Generators
 
 Different generators can be used to generate graphs for these solvers to solve. Generators are defined in a similar manner. Here's a generator stub.
@@ -88,3 +94,9 @@ Follow these steps if you want to implement your own generator:
 
   1. Create a new file `MyGenerator.cpp` and place it in `src/generators/`.
   2. Run `premake5.exe` to generate project files for the generator.
+
+This repo also comes packed with a few generators:
+
+  * **Circular**
+  * **Star**
+  * **Uniform**
