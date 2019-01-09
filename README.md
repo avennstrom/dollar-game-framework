@@ -67,7 +67,6 @@ Follow these steps if you want to implement your own solver:
   
   1. Create a new file `MySolver.cpp` and place it in `src/solvers/`.
   2. Run `premake5.exe` to generate project files for the solver.
-  3. Compile.
   
 ## Generators
 
@@ -89,4 +88,3 @@ Follow these steps if you want to implement your own generator:
 
   1. Create a new file `MyGenerator.cpp` and place it in `src/generators/`.
   2. Run `premake5.exe` to generate project files for the generator.
-  3. Compile.
