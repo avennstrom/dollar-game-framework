@@ -10,6 +10,7 @@
 #include <future>
 #include <iomanip>
 #include <cstring>
+#include <map>
 
 #if _WIN32
 #define NOMINMAX
@@ -34,14 +35,14 @@ static std::experimental::filesystem::path getExecutableDir()
 #endif
 }
 
-Graph generateGraph(GraphGenerator& generator, std::mt19937& random, size_t size)
+static Graph generateGraph(const GraphGenerator& generator, std::mt19937& random, size_t size)
 {
 	while (true)
 	{
 		Graph graph;
 		GeneratorContext ctx(graph, random);
 
-		GeneratorParams params(size, -5, 10);
+		GeneratorParams params(size, -2, 3);
 
 		generator.generate(ctx, params);
 
@@ -308,124 +309,199 @@ static void printUsage()
 	printGenerators();
 }
 
-int main(int argc, char* argv[])
+static void benchmarkSolver(std::map<std::string, std::vector<std::string>> args)
 {
-	std::vector<std::string> args;
-	args.reserve(argc - 1);
-
-	for (int i = 1; i < argc; ++i)
+	if (args.find("--solver") == args.cend())
 	{
-		args.push_back(argv[i]);
+		std::cerr << "Missing argument: --solver\n";
+		std::exit(-1);
 	}
 
-	if (args.empty())
+	if (args.find("--generators") == args.cend())
 	{
-		printUsage();
-		return -1;
+		std::cerr << "Missing argument: --generators\n";
+		std::exit(-1);
 	}
 
-	std::vector<std::string> argSolvers;
-	std::string argGenerator;
-	size_t argGraphSize = -1;
-	size_t argIterations = -1;
-
-	for (int i = 0; i < args.size();)
-	{
-		if (args[i] == "--solvers")
-		{
-			for (++i; i < args.size() && args[i][0] != '-'; ++i)
-			{
-				argSolvers.push_back(args[i]);
-			}
-		}
-		else if (args[i] == "--generator")
-		{
-			argGenerator = args[i + 1];
-			i += 2;
-		}
-		else if (args[i] == "--graph-size")
-		{
-			argGraphSize = std::stoull(args[i + 1]);
-			i += 2;
-		}
-		else if (args[i] == "--iterations")
-		{
-			argIterations = std::stoull(args[i + 1]);
-			i += 2;
-		}
-		else
-		{
-			++i;
-		}
-	}
-
-	if (argIterations == -1)
+	if (args.find("--iterations") == args.cend())
 	{
 		std::cerr << "Missing argument: --iterations\n";
-		return -1;
+		std::exit(-1);
 	}
 
-	if (argGraphSize == -1)
+	if (args.find("--graph-sizes") == args.cend())
 	{
-		std::cerr << "Missing argument: --graph-size\n";
-		return -1;
+		std::cerr << "Missing argument: --graph-sizes\n";
+		std::exit(-1);
 	}
 
-	if (argSolvers.empty())
-	{
-		std::cerr << "No solvers specified.\n";
-		return -1;
-	}
+	const auto& argSolver = args["--solver"][0];
+	const auto& argGenerators = args["--generators"];
+	const auto& argIterations = args["--iterations"][0];
+	const auto& argGraphSizes = args["--graph-sizes"];
 
-	if (argGenerator.empty())
-	{
-		std::cerr << "No generator specified.\n";
-		return -1;
-	}
+	std::unique_ptr<GraphSolver> solver;
+	std::vector<std::unique_ptr<GraphGenerator>> generators;
+	size_t iterations;
+	std::vector<size_t> graphSizes;
 
-	std::unique_ptr<GraphGenerator> generator;
 	{
-		auto generators = enumGenerators();
-		for (auto&& g : generators)
+		auto allSolvers = enumSolvers();
+		for (auto&& s : allSolvers)
 		{
-			if (g->getName() == argGenerator)
+			if (s->getName() == argSolver)
 			{
-				generator = std::move(g);
+				solver = std::move(s);
 				break;
 			}
 		}
 	}
 
-	if (!generator)
 	{
-		std::cerr << "Generator \"" << argGenerator << "\" not found.\n";
-	}
-
-	std::vector<std::unique_ptr<GraphSolver>> solvers;
-	{
-		auto allSolvers = enumSolvers();
-		for (const std::string& argSolver : argSolvers)
+		auto allGenerators = enumGenerators();
+		for (const auto& argGenerator : argGenerators)
 		{
-			bool foundSolver = false;
-			for (auto&& solver : allSolvers)
+			bool foundGenerator = false;
+			for (auto&& generator : allGenerators)
 			{
-				if (solver->getName() == argSolver)
+				if (generator && generator->getName() == argGenerator)
 				{
-					solvers.push_back(std::move(solver));
-					foundSolver = true;
+					generators.push_back(std::move(generator));
+					foundGenerator = true;
 					break;
 				}
 			}
 
-			if (!foundSolver)
+			if (!foundGenerator)
 			{
-				std::cerr << "Solver \"" << argSolver << "\" not found.\n";
-				return -1;
+				std::cerr << "Generator \"" << argGenerator << "\" not found.\n";
+				exit(-1);
 			}
 		}
 	}
 
-	compare(*generator, solvers, argGraphSize, argIterations);
+	try
+	{
+		iterations = std::stoull(argIterations);
+	}
+	catch (const std::exception&)
+	{
+		std::cerr << "The --iterations must be a positive integer.\n";
+		exit(-1);
+	}
+
+	try
+	{
+		for (const auto& argGraphSize : argGraphSizes)
+		{
+			graphSizes.push_back(std::stoull(argGraphSize));
+		}
+	}
+	catch (const std::exception&)
+	{
+		std::cerr << "The --graph-sizes must be positive integers.\n";
+		exit(-1);
+	}
+
+	std::vector<std::vector<double>> results;
+	results.resize(generators.size());
+	for (auto&& result : results)
+	{
+		result.resize(graphSizes.size());
+	}
+
+	std::random_device rd;
+	std::mt19937 r(rd());
+
+	for (size_t generatorIt = 0; generatorIt < generators.size(); ++generatorIt)
+	{
+		const auto& generator = generators[generatorIt];
+		for (size_t graphSizeIt = 0; graphSizeIt < graphSizes.size(); ++graphSizeIt)
+		{
+			const size_t graphSize = graphSizes[graphSizeIt];
+
+			size_t totalSolverMoves = 0;
+
+			std::cout << "Generator: " << generator->getName() << " - Size: " << graphSize << "\n";
+
+			for (size_t iteration = 0; iteration < iterations; ++iteration)
+			{
+				while (true)
+				{
+					Graph graph = generateGraph(*generator, r, graphSize);
+
+					bool solveSuccessful;
+
+					std::vector<Move> moves;
+					if (trySolve(graph, *solver, moves, 1000000))
+					{
+						solveSuccessful = true;
+					}
+					else
+					{
+						solveSuccessful = false;
+					}
+
+					if (solveSuccessful)
+					{
+						totalSolverMoves += moves.size();
+						break;
+					}
+				}
+			}
+
+			const double avg = (double)totalSolverMoves / (double)iterations;
+
+			std::cout << "Avg moves: " << std::fixed << std::setprecision(2) << avg << "\n";
+
+			results[generatorIt][graphSizeIt] = avg;
+		}
+	}
+
+	std::ofstream os("result.csv");
+	
+	for (auto&& generator : generators)
+	{
+		os << ';' << generator->getName();
+	}
+	os << '\n';
+
+	for (size_t graphSizeIt = 0; graphSizeIt < graphSizes.size(); ++graphSizeIt)
+	{
+		os << graphSizes[graphSizeIt];
+		for (size_t generatorIt = 0; generatorIt < generators.size(); ++generatorIt)
+		{
+			os << ';' << results[generatorIt][graphSizeIt];
+		}
+		os << '\n';
+	}
+}
+
+int main(int argc, char* argv[])
+{
+	if (argc == 1)
+	{
+		printUsage();
+		exit(-1);
+	}
+
+	std::map<std::string, std::vector<std::string>> args;
+
+	std::string lastArgName;
+	for (int i = 1; i < argc; ++i)
+	{
+		if (strlen(argv[i]) >= 2 && argv[i][0] == '-' && argv[i][1] == '-')
+		{
+			lastArgName = argv[i];
+			continue;
+		}
+		else
+		{
+			args[lastArgName].push_back(argv[i]);
+		}
+	}
+
+	benchmarkSolver(args);
 
     return 0;
 }
