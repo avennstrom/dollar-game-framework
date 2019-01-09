@@ -1,25 +1,5 @@
 #include "Graph.hpp"
 
-/*bool operator==(const NodeHandle& a, const NodeHandle& b)
-{
-	return a.index == b.index;
-}
-
-bool operator!=(const NodeHandle& a, const NodeHandle& b)
-{
-	return a.index != b.index;
-}
-
-bool operator<(const NodeHandle& a, const NodeHandle& b)
-{
-	return a.index < b.index;
-}
-
-bool operator>(const NodeHandle& a, const NodeHandle& b)
-{
-	return a.index > b.index;
-}*/
-
 void Graph::give(NodeHandle node)
 {
 	assert(node != NullNode);
@@ -94,22 +74,6 @@ void Graph::init(
 		m_connections[edge.b][it_b++] = edge.a;
 	}
 }
-
-/*void Graph::write(std::ostream& stream)
-{
-	//if (stream.flags() & std::ios::binary)
-	{
-		const uint64_t nodeCount = static_cast<uint64_t>(m_values.size());
-		stream.write((const char*)&nodeCount, sizeof(nodeCount));
-		stream.write((const char*)m_values.data(), nodeCount * sizeof(NodeValue));
-		for (const auto& connections : m_connections)
-		{
-			const uint16_t connCount = static_cast<uint16_t>(connections.size());
-			stream.write((const char*)&connCount, sizeof(connCount));
-			stream.write((const char*)connections.data(), connCount * sizeof(NodeHandle));
-		}
-	}
-}*/
 
 bool Graph::isSolvable() const
 {
