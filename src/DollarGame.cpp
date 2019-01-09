@@ -142,23 +142,6 @@ static auto enumGenerators()
 	return outGenerators;
 }
 
-void printSolvers()
-{
-	const auto solvers = enumSolvers();
-
-	size_t maxSolverNameLength = 0;
-	for (auto&& solver : solvers)
-	{
-		maxSolverNameLength = std::max(maxSolverNameLength, solver->getName().length());
-	}
-
-	std::cout << "\nAvailable solvers:\n";
-	for (auto&& solver : solvers)
-	{
-		std::cout << std::setw(maxSolverNameLength) << solver->getName() << " - " << solver->getDescription() << '\n';
-	}
-}
-
 void compare(
 	GraphGenerator& generator, 
 	std::vector<std::unique_ptr<GraphSolver>>& solvers, 
@@ -274,6 +257,40 @@ void compare(
 	}
 }
 
+static void printSolvers()
+{
+	const auto solvers = enumSolvers();
+
+	size_t maxNameLength = 0;
+	for (auto&& solver : solvers)
+	{
+		maxNameLength = std::max(maxNameLength, solver->getName().length());
+	}
+
+	std::cout << "\nSolvers available:\n\n";
+	for (auto&& solver : solvers)
+	{
+		std::cout << "  " << std::setw(maxNameLength) << solver->getName() << " - " << solver->getDescription() << '\n';
+	}
+}
+
+static void printGenerators()
+{
+	const auto generators = enumGenerators();
+
+	size_t maxNameLength = 0;
+	for (auto&& generator : generators)
+	{
+		maxNameLength = std::max(maxNameLength, generator->getName().length());
+	}
+
+	std::cout << "\nGenerators available:\n\n";
+	for (auto&& generator : generators)
+	{
+		std::cout << "  " << std::setw(maxNameLength) << generator->getName() << " - " << generator->getDescription() << '\n';
+	}
+}
+
 static void printUsage()
 {
 	std::cout << "Usage:\n\n";
@@ -284,8 +301,11 @@ static void printUsage()
 	std::cout << "  --generator "  << std::setw(w) << "<generator>" << " - Specify which generator should be used to generate graphs.\n";
 	std::cout << "  --graph-size"  << std::setw(w) << "N" << " - Size of the graphs.\n";
 	std::cout << "  --iterations"  << std::setw(w) << "N" << " - Number of iterations to run.\n";
+	std::cout << '\n';
 
-	std::cout << std::endl;
+	printSolvers();
+
+	printGenerators();
 }
 
 int main(int argc, char* argv[])
