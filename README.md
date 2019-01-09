@@ -2,6 +2,22 @@
 
 A framework for creating custom solvers for The Dollar Game. Numberphile has a [great video](https://youtu.be/U33dsEcKgeQ) describing the concept of the game. It's also where I got the inspiration for this project.
 
+## Building
+
+### Windows
+
+  1. Download [Premake](https://github.com/premake/premake-core)
+  2. Place `premake5.exe` in the repository root
+  3. Run `.\premake5.exe vs2017`
+  4. Open generated solution in Visual Studio
+
+### Linux
+
+  1. Download [Premake](https://github.com/premake/premake-core)
+  2. Place `premake5` in the repository root
+  3. Run `./premake5 gmake`
+  4. `make config=release_linux` or `make config=debug_linux`
+  
 ## Usage
 
 `.\DollarGame.exe --generator Star --solvers TakePoorest GiveRichest --graph-size 1000 --iterations 10 `
