@@ -1,4 +1,4 @@
-# dollar-game
+# dollar-game-framework
 
 A framework for creating custom solvers for The Dollar Game. Numberphile has a [great video](https://youtu.be/U33dsEcKgeQ) describing the concept of the game. It's also where I got the inspiration for this project.
 
