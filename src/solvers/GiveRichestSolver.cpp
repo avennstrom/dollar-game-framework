@@ -5,8 +5,8 @@ SOLVER_DESCRIPTION("Finds the richest node and gives to its neighbors.");
 
 static NodeHandle getRichestNode(const Graph& graph)
 {
-	const auto minIt = std::max_element(graph.values().cbegin(), graph.values().cend());
-	return (NodeHandle)std::distance(graph.values().cbegin(), minIt);
+	const auto maxIt = std::max_element(graph.values().cbegin(), graph.values().cend());
+	return (NodeHandle)std::distance(graph.values().cbegin(), maxIt);
 }
 
 SOLVER_FUNC(SolverContext& ctx)
