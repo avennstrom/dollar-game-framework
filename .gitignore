@@ -6,6 +6,10 @@
 *.lo
 *.o
 *.obj
+*.ilk
+*.pdb
+build
+lib
 
 # Precompiled Headers
 *.gch
@@ -30,3 +34,9 @@
 *.exe
 *.out
 *.app
+
+# Visual Studio files
+.vs
+*.sln
+*.vcxproj
+*.vcxproj.user
