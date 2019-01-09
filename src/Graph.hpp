@@ -4,6 +4,7 @@
 #include <set>
 #include <algorithm>
 #include <cassert>
+#include <cinttypes>
 
 typedef uint32_t NodeHandle;
 typedef int32_t NodeValue;

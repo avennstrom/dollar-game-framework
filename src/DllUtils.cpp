@@ -12,7 +12,7 @@ DllHandle::DllHandle(std::string filename)
 #if _WIN32
 	m_handle = LoadLibraryA(filename.c_str());
 #elif __linux__
-	m_handle = dlopen(dllName.c_str(), RTLD_LAZY);
+	m_handle = dlopen(filename.c_str(), RTLD_LAZY);
 #endif
 }
 
